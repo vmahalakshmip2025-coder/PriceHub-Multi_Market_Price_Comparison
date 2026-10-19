@@ -43,6 +43,13 @@
             <scope>runtime</scope>
         </dependency>
 
+        <!-- H2 Database (used only on Render) -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
         <!-- Apache Commons CSV: Robust CSV parser to handle BOM, quotes, and commas -->
         <dependency>
             <groupId>org.apache.commons</groupId>
