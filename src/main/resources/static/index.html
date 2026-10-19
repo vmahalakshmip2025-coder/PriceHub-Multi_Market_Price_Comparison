@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PriceHub - Multi-Marketplace Price Comparison</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Header & Navigation -->
+    <header class="app-header">
+        <div class="header-container">
+            <div class="brand-logo" onclick="app.showCatalogView()">
+                <span class="logo-icon">🏷️</span>
+                <h1>Price<span>Hub</span></h1>
+            </div>
+
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Search products (e.g. Earphones, Churidar, Cycle)..." autocomplete="off">
+                <button id="clearSearchBtn" title="Clear search" class="hidden">&times;</button>
+            </div>
+
+            <div class="header-actions">
+                <button id="themeToggleBtn" class="theme-toggle" title="Toggle Light/Dark Theme">
+                    <span id="themeIcon">🌙</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Global Dataset Transparency Disclaimer -->
+    <aside class="dataset-disclaimer">
+        <div class="disclaimer-content">
+            <span class="info-icon">ℹ️</span>
+            <span><strong>Dataset Notice:</strong> Prices are from our dataset as of the dates shown and may differ from the live marketplace. Click <em>View Deal</em> to check the current price.</span>
+        </div>
+    </aside>
+
+    <main class="main-content">
+
+        <!-- Notification / Toast Container -->
+        <div id="toastContainer" class="toast-container"></div>
+
+        <!-- ================= CATALOG VIEW ================= -->
+        <section id="catalogView" class="view-section">
+            
+            <!-- Controls Bar: Filter Chips & Sorting -->
+            <div class="controls-bar">
+                <div class="category-chips" id="categoryChips">
+                    <button class="chip active" data-category="ALL">All Categories</button>
+                    <button class="chip" data-category="EARPHONES">🎧 Earphones</button>
+                    <button class="chip" data-category="FASHION">👗 Fashion</button>
+                    <button class="chip" data-category="HOME_AND_KIDS">🏠 Home &amp; Kids</button>
+                </div>
+
+                <div class="sort-wrapper">
+                    <label for="sortSelect">Sort by:</label>
+                    <select id="sortSelect">
+                        <option value="featured">Featured</option>
+                        <option value="price-asc">Price: Low to High</option>
+                        <option value="price-desc">Price: High to Low</option>
+                        <option value="rating-desc">Customer Rating</option>
+                        <option value="name-asc">Name: A to Z</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Loading Spinner -->
+            <div id="catalogLoading" class="loader-state">
+                <div class="spinner"></div>
+                <p>Loading products from catalog...</p>
+            </div>
+
+            <!-- Error State -->
+            <div id="catalogError" class="error-state hidden">
+                <span class="error-icon">⚠️</span>
+                <h3>Unable to load catalog</h3>
+                <p id="catalogErrorMessage">Please ensure the backend server and database are running.</p>
+                <button class="btn btn-primary" onclick="app.loadCatalog()">Retry</button>
+            </div>
+
+            <!-- Empty State -->
+            <div id="catalogEmpty" class="empty-state hidden">
+                <span class="empty-icon">🔍</span>
+                <h3>No products matched your criteria</h3>
+                <p>Try searching with another keyword or resetting the category filter.</p>
+                <button class="btn btn-secondary" onclick="app.resetFilters()">Reset Filters</button>
+            </div>
+
+            <!-- Products Grid -->
+            <div id="productsGrid" class="products-grid"></div>
+        </section>
+
+        <!-- ================= COMPARISON VIEW ================= -->
+        <section id="comparisonView" class="view-section hidden">
+            
+            <div class="breadcrumb-nav">
+                <button class="btn-back" onclick="app.showCatalogView()">
+                    &larr; Back to Products
+                </button>
+            </div>
+
+            <div id="comparisonLoading" class="loader-state">
+                <div class="spinner"></div>
+                <p>Analyzing marketplace prices and scoring best value...</p>
+            </div>
+
+            <div id="comparisonError" class="error-state hidden">
+                <span class="error-icon">⚠️</span>
+                <h3>Comparison failed</h3>
+                <p id="comparisonErrorMessage">Could not load pricing details for this product.</p>
+                <button class="btn btn-primary" onclick="app.showCatalogView()">Return to Catalog</button>
+            </div>
+
+            <div id="comparisonContent" class="comparison-container hidden">
+
+                <!-- Product Summary Card -->
+                <div class="product-banner-card">
+                    <div class="banner-image-wrapper">
+                        <img id="detailProductImage" src="" alt="Product Image">
+                    </div>
+                    <div class="banner-details">
+                        <span id="detailProductCategory" class="badge-category">Category</span>
+                        <h2 id="detailProductName">Product Title</h2>
+                        <p class="brand-text">Brand: <strong id="detailProductBrand">Generic</strong></p>
+
+                        <div class="price-highlights">
+                            <div class="stat-pill lowest">
+                                <span class="stat-label">Lowest Price</span>
+                                <span class="stat-value" id="detailLowestPrice">₹0</span>
+                            </div>
+                            <div class="stat-pill savings">
+                                <span class="stat-label">Potential Savings</span>
+                                <span class="stat-value" id="detailSavings">₹0 (0%)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Best Value Recommendation Banner -->
+                <div id="bestValueBanner" class="best-value-banner hidden">
+                    <div class="best-value-ribbon">⭐ BEST VALUE CHOICE</div>
+                    <div class="best-value-body">
+                        <div class="best-value-details">
+                            <div class="best-value-title-row">
+                                <h3 id="bestValueMarketplace">Marketplace</h3>
+                                <span class="best-value-price" id="bestValuePrice">₹0</span>
+                            </div>
+                            <p id="bestValueReason" class="best-value-reason">Reasoning statement</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3 Marketplace Comparison Cards -->
+                <h3 class="section-heading">Marketplace Price Comparison</h3>
+                <div class="marketplaces-grid" id="marketplacesGrid">
+                    <!-- Amazon, Flipkart, Meesho cards injected by JS -->
+                </div>
+
+                <!-- CSS / SVG Interactive Price Bar Chart -->
+                <div class="chart-section-card">
+                    <h3 class="chart-title">Price Distribution Comparison</h3>
+                    <div id="priceBarChart" class="price-bar-chart">
+                        <!-- Rendered dynamically -->
+                    </div>
+                </div>
+
+                <!-- Price History SVG Chart -->
+                <div class="chart-section-card">
+                    <h3 class="chart-title">Historical Price Trend (Audit Log)</h3>
+                    <p class="chart-subtitle">Recorded price movements across dataset revisions</p>
+                    <div id="priceHistoryChartContainer" class="history-chart-wrapper">
+                        <!-- Rendered via inline SVG -->
+                    </div>
+                </div>
+
+                <!-- Alternative Advisor Section -->
+                <div class="alternatives-section">
+                    <div class="alternatives-header">
+                        <div>
+                            <h3 class="section-heading">Alternative Advisor</h3>
+                            <p class="section-subtitle">Similar products in this category evaluated via price-to-rating scoring</p>
+                        </div>
+                    </div>
+                    <div id="alternativesGrid" class="alternatives-grid">
+                        <!-- Alternatives injected by JS -->
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="app-footer">
+        <p>PriceHub &copy; 2026 &bull; Educational Multi-Marketplace Price Comparison System &bull; Java 21 &amp; Spring Boot</p>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>
